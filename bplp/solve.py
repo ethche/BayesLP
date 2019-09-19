@@ -4,6 +4,25 @@ import scipy.optimize as opt
 
 # primal solver
 def bayes_primal(program):
+    """
+    Sets up the primal program given the parameters specified in program
+    INPUT
+        program (BayesLP) class instance that contains parameters of the
+            problem.
+    RETURNS
+        constraints (dict) contains the constraints of the Bayes LP problem,
+            which are the required marginal distributions of the optimal mechanism.
+            prior (n x 1 array) the prior distribution of the states.
+            ic_constraint (n x 1 array) an array of 0s indicating the receiver's
+                expected utility in each state
+        primal (dict) contains results of the primal LP:
+            mechanism (n x n array) joint probability distribution between states
+                and messages.
+            value_mat (n x n array) the expected utility obtained by the sender
+                under the optimal mechanism.
+        dual (dict) contains results of the dual LP:
+            
+    """
 
     # load program and set up the grid
     n = program.n
@@ -38,7 +57,7 @@ def bayes_primal(program):
     # negative, so that linprog will return a maximum
     V = -V
 
-    # A matrix, defines projections on S and M
+    # The A matrix, defines projections on S and M
     ones = np.ones(n)
     ones_T = ones.reshape((n,1))
 
@@ -75,7 +94,7 @@ def bayes_primal(program):
     value_matrix = -V
     value_matrix = value_matrix.reshape((n, n))
 
-    outcome = {"mechanism": phi,
+    primal = {"mechanism": phi,
                "prior": bayes_b,
                "ic_constraint": ic_b,
                "value_mat": value_matrix}
