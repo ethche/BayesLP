@@ -15,11 +15,11 @@ def bayes_primal(program):
             prior (n x 1 array) the prior distribution of the states.
             ic_constraint (n x 1 array) an array of 0s indicating the receiver's
                 expected utility in each state
+            value_mat (n x n array) the expected utility obtained by the sender
+                under the optimal mechanism.
         primal (dict) contains results of the primal LP:
             mechanism (n x n array) joint probability distribution between states
                 and messages.
-            value_mat (n x n array) the expected utility obtained by the sender
-                under the optimal mechanism.
         dual (dict) contains results of the dual LP:
 
     """
@@ -40,15 +40,15 @@ def bayes_primal(program):
 
     # Bayes-plausibility constraint
     # This is the prior distribution evaluated on the vector of states
-    bayes_b = prior_vec(grid)
+    prior = prior_vec(grid)
     # Normalize prior distribution
-    if sum(bayes_b) != 1.:
-        bayes_b = np.divide(bayes_b, sum(bayes_b))
+    if sum(prior) != 1.:
+        prior = np.divide(prior, sum(prior))
 
     # Incentive compatibility constraint
-    ic_b = np.zeros(n)
+    ic_constraint = np.zeros(n)
     # Concatenate constraint realizations as a (2n x 1 array)
-    b = np.concatenate((bayes_b, ic_b), axis = 0)
+    b = np.concatenate((prior, ic_constraint), axis = 0)
 
     # Create a matrix of sender's utilities for different
     # (state, message) combinations.
@@ -74,38 +74,45 @@ def bayes_primal(program):
     # mechanism, and the sender's private information (averaged over all states).
     # This is made to equal 0 in the program (this is the IC constraint,
     # the sender has an expected utility of 0).
-    ic_proj = []
+    ic_msg_proj = []
     for i in range(n):
         postr_utility = u_vec(grid[i], grid) * g_vec(grid[i], grid)
         postr_utility_mat = np.diag(postr_utility)
 
         if i == 0:
-            ic_proj = postr_utility_mat
+            ic_msg_proj = postr_utility_mat
         else:
-            ic_proj = np.vstack((ic_proj, postr_utility_mat))
+            ic_msg_proj = np.vstack((ic_msg_proj, postr_utility_mat))
 
     # Stack the state space projection and the column space projection
     # horizontally. Then take the transpose.
-    transport_T = np.hstack((state_space_proj, ic_proj))
+    transport_T = np.hstack((state_space_proj, ic_msg_proj))
     transport   = transport_T.T
 
     # Solve with linprog
     bp_lin_prog = opt.linprog(V, A_eq = transport, b_eq = b)
 
-    # recover joint probability distribution
+    # Recover joint probability distribution
     phi = bp_lin_prog.x.reshape((n,n))
-    # normalize
+
+    # Normalize (although this should not be necessary), since the prior
+    # distribution is normalized to 1.
     phi = np.divide(phi, phi.sum())
 
     value_matrix = -V
     value_matrix = value_matrix.reshape((n, n))
 
-    primal = {"mechanism": phi,
-               "prior": bayes_b,
-               "ic_constraint": ic_b,
-               "value_mat": value_matrix}
+    # Save parameters of the problem
+    params = {"grid": grid,
+              "value_mat": value_matrix,
+              "prior": prior,
+              "ic_constraint": ic_constraint}
 
-    return(outcome)
+    # Save solutions
+    solutions = {"primal": phi,
+                 "dual": }
+
+    return (params, solutions)
 
 # Dual solver
 #def bayes_dual(program):
