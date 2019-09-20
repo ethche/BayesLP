@@ -2,43 +2,45 @@
 import numpy as np
 import scipy.optimize as opt
 
-# primal solver
-def bayes_primal(program):
+def bayes_lp_solver(program):
     """
-    Sets up the primal program given the parameters specified in program
+    Sets up the primal program given the parameters specified in program.
+    This is a transportation program from the prior density on the state space
+    to the receiver's incentive compability constraint on the message space.
     INPUT
         program (BayesLP) class instance that contains parameters of the
             problem.
     RETURNS
-        constraints (dict) contains the constraints of the Bayes LP problem,
-            which are the required marginal distributions of the optimal mechanism.
-            prior (n x 1 array) the prior distribution of the states.
+        solve (dict) contains the parameters, constraint realizations, and
+        solutions of the Bayes LP problem.
+            program (dict) the parameters of the program
+            prior_constraint (n x 1 array) the prior density evaluated on states.
             ic_constraint (n x 1 array) an array of 0s indicating the receiver's
                 expected utility in each state
             value_mat (n x n array) the expected utility obtained by the sender
                 under the optimal mechanism.
-        primal (dict) contains results of the primal LP:
-            mechanism (n x n array) joint probability distribution between states
-                and messages.
-        dual (dict) contains results of the dual LP:
-
+            primal (n x n array) the optimal mechanism, a joint probability
+                distribution between states and messages.
+            dual_state (n x 1 array) the dual solution, dual of the prior constraint
+            dual_message (n x 1 array) the dual solution, dual of the ic constraint
     """
 
     # Load program parameters.
     # Set up the grid.
-    n = program.n
+    n = program.n_grid
     interval = program.interval
     grid = np.linspace(interval[0], interval[1], n)
 
     # Vectorize functions
-    prior_vec = np.vectorize(program.prior)
-    u_vec     = np.vectorize(program.u)
-    g_vec     = np.vectorize(program.g)
-    v_vec     = np.vectorize(program.v)
+    prior_vec         = np.vectorize(program.prior)
+    sender_util_vec   = np.vectorize(program.sender_util)
+    private_info_vec  = np.vectorize(program.private_info)
+    receiver_util_vec = np.vectorize(program.receiver_util)
 
     ## Constraints
 
     # Bayes-plausibility constraint
+
     # This is the prior distribution evaluated on the vector of states
     prior = prior_vec(grid)
     # Normalize prior distribution
@@ -60,6 +62,8 @@ def bayes_primal(program):
     # negative, so that linprog will return a maximum
     V = -V
 
+    ## Transportation matrix
+
     # The "transportation" matrix, which defines the projections
     # on the state space and the message space.
     ones = np.ones(n)
@@ -74,30 +78,38 @@ def bayes_primal(program):
     # mechanism, and the sender's private information (averaged over all states).
     # This is made to equal 0 in the program (this is the IC constraint,
     # the sender has an expected utility of 0).
-    ic_msg_proj = []
+    ic_message_proj = []
     for i in range(n):
         postr_utility = u_vec(grid[i], grid) * g_vec(grid[i], grid)
         postr_utility_mat = np.diag(postr_utility)
 
         if i == 0:
-            ic_msg_proj = postr_utility_mat
+            ic_message_proj = postr_utility_mat
         else:
-            ic_msg_proj = np.vstack((ic_msg_proj, postr_utility_mat))
+            ic_message_proj = np.vstack((ic_message_proj, postr_utility_mat))
 
     # Stack the state space projection and the column space projection
     # horizontally. Then take the transpose.
-    transport_T = np.hstack((state_space_proj, ic_msg_proj))
+    transport_T = np.hstack((state_space_proj, ic_message_proj))
     transport   = transport_T.T
 
-    # Solve with linprog
-    bp_lin_prog = opt.linprog(V, A_eq = transport, b_eq = b)
+    ## Solve
 
-    # Recover joint probability distribution
-    phi = bp_lin_prog.x.reshape((n,n))
+    # Solve with linprog
+    bp_primal = opt.linprog(V, A_eq = transport, b_eq = b)
+    bp_dual   = opt.linprog(b, A_eq = transport_T, b_eq = V)
+
+    # The primal solution, which is a joint probability distribution
+    mechanism = bp_primal.x.reshape((n,n))
+
+    # The dual solutions, which are functions over the state space
+    # and the message space
+    dual_state = bp_dual.x[:n]
+    dual_message = bp_dual.x[n:]
 
     # Normalize (although this should not be necessary), since the prior
     # distribution is normalized to 1.
-    phi = np.divide(phi, phi.sum())
+    mechanism = np.divide(mechanism, mechanism.sum())
 
     value_matrix = -V
     value_matrix = value_matrix.reshape((n, n))
@@ -105,14 +117,17 @@ def bayes_primal(program):
     # Save parameters of the problem
     params = {"grid": grid,
               "value_mat": value_matrix,
-              "prior": prior,
+              "prior_constraint": prior,
               "ic_constraint": ic_constraint}
 
     # Save solutions
-    solutions = {"primal": phi,
-                 "dual": }
+    solutions = {"primal": mechanism,
+                 "dual_state": dual_state,
+                 "dual_message": dual_message}
 
-    return (params, solutions)
+    solve = {}
+    solve.update(program)
+    solve.update(params)
+    solve.update(solutions)
 
-# Dual solver
-#def bayes_dual(program):
+    return solve
