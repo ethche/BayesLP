@@ -56,7 +56,7 @@ def bayes_lp_solver(program):
     # (state, message) combinations.
     V_mat = np.ndarray(shape = (n,n))
     for j in range(n):
-        V_mat[:,j] = v_vec(grid,grid[j])
+        V_mat[:,j] = sender_util_vec(grid,grid[j])
     # Reshape to an n^2 array, the cost vector in the LP
     V = V_mat.reshape((n**2))
     # negative, so that linprog will return a maximum
@@ -80,7 +80,7 @@ def bayes_lp_solver(program):
     # the sender has an expected utility of 0).
     ic_message_proj = []
     for i in range(n):
-        postr_utility = u_vec(grid[i], grid) * g_vec(grid[i], grid)
+        postr_utility = receiver_util_vec(grid[i], grid) * private_info_vec(grid[i], grid)
         postr_utility_mat = np.diag(postr_utility)
 
         if i == 0:
@@ -115,7 +115,9 @@ def bayes_lp_solver(program):
     value_matrix = value_matrix.reshape((n, n))
 
     # Save parameters of the problem
-    params = {"grid": grid,
+    params = {"n_grid": n,
+              "interval": interval,
+              "grid": grid,
               "value_mat": value_matrix,
               "prior_constraint": prior,
               "ic_constraint": ic_constraint}
@@ -126,7 +128,6 @@ def bayes_lp_solver(program):
                  "dual_message": dual_message}
 
     solve = {}
-    solve.update(program)
     solve.update(params)
     solve.update(solutions)
 
