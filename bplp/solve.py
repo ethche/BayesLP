@@ -9,7 +9,7 @@ def bayes_lp_solver(program):
     to the receiver's incentive compability constraint on the message space.
     INPUT
         program (BayesLP) class instance that contains parameters of the
-            problem.
+            problem (e.g. receiver and sender utility functions).
     RETURNS
         solve (dict) contains the parameters, constraint realizations, and
         solutions of the Bayes LP problem.
@@ -123,7 +123,7 @@ def bayes_lp_solver(program):
               "ic_constraint": ic_constraint}
 
     # Save solutions
-    solutions = {"primal": mechanism,
+    solutions = {"mechanism": mechanism,
                  "dual_state": dual_state,
                  "dual_message": dual_message}
 

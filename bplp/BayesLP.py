@@ -12,6 +12,7 @@ class BayesLP:
 
         # Receiver's utility function
         self.receiver_util = lambda s, r: s - r
+
         # Receiver's private information distribution
         self.private_info = lambda s, r: 1
 

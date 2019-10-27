@@ -1,4 +1,3 @@
-
 # Adapted from code written by Remi Flamary
 # <remi.flamary@unice.fr>
 #
@@ -44,7 +43,7 @@ def plot_primal_joint_marginal(solved_program, title=''):
 
     # Plot heatmap of the primal mechanism
     ax3 = pl.subplot(gs[1:, 1:])
-    pl.imshow(solved_program["primal"], interpolation='nearest')
+    pl.imshow(solved_program["mechanism"], interpolation='nearest')
     pl.axis('off')
 
     pl.tight_layout()
