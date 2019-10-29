@@ -26,7 +26,7 @@ def plot_primal_joint_marginal(solved_program, title=''):
     grid     = np.linspace(interval[0], interval[1], n)
 
     # Dimensions from the primal solution
-    na, nb = solved_program["primal"].shape
+    na, nb = solved_program["mechanism"].shape
 
     gs = gridspec.GridSpec(3, 3)
 
