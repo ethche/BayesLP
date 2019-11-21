@@ -7,15 +7,17 @@ class BayesLP:
     def __init__(self):
 
         # Number of points in the grid
-        self.n = 10
+        self.n_grid = 10
         self.interval = [0, 1]
 
-        # receiver utility function and conditional probability density
-        self.u = lambda s, r: s - r
-        self.g = lambda s, r: 1
+        # Receiver's utility function
+        self.receiver_util = lambda s, r: s - r
 
-        # sender utility function
-        self.v = lambda s, m: m**2
+        # Receiver's private information distribution
+        self.private_info = lambda s, r: 1
 
-        # density of prior distribution
+        # Sender's utility function
+        self.sender_util = lambda s, m: m**2
+
+        # Prior distribution
         self.prior = lambda s: norm.pdf(s)
