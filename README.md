@@ -1,7 +1,8 @@
 # BayesLP
 
 The notebook <code>Bayes_LP.ipynb</code> uses the connection made between optimal transport and Bayesian Persuasion in  [Kolotilin (2018)][1] to identify and visualize optimal information mechanisms.
-* Please see the paper or the slides <code>slides/kolotilin_slides.pdf</code> for details concerning the communication game of the paper.
+* Please see the paper for details concerning the communication game of the paper.
+* Feel free to checkout the slides in slides <code>slides/kolotilin_slides.pdf</code>, which I made to understand the model. Feel free to let me know if there are any errors in the slides.
 
 The linear programming approach in this paper, under certain circumstances, allows us to explicitly compute optimal mechanisms as the solution of a transportation problem in situations where concavification does not easily generate a concrete solution.
 
