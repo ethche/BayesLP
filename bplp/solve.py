@@ -109,7 +109,7 @@ def bayes_lp_solver(program):
 
     # Normalize (although this should not be necessary), since the prior
     # distribution is normalized to 1.
-    mechanism = np.divide(mechanism, mechanism.sum())
+    # mechanism = np.divide(mechanism, mechanism.sum())
 
     value_matrix = -V
     value_matrix = value_matrix.reshape((n, n))
