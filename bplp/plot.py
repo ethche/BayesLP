@@ -55,9 +55,6 @@ def plot_primal_joint_marginal(solved_program, dir, title = ''):
 
     pl.imshow(solved_program["mechanism"], interpolation='nearest')
 
-
-
-
     pl.tight_layout()
     pl.subplots_adjust(wspace=0.1, hspace=0.8)
     pl.savefig(dir, dpi = 300)
